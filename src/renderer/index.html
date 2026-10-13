@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:;" />
+  <title>AeroScope — Tactical API Workbench & Distributed Topology Tracker</title>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Anime.js for smooth gaming transitions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="styles/main.css" />
+  <!-- Standalone Vis-Network for Mindmap -->
+  <script src="vendor/vis-network.min.js"></script>
+</head>
+<body>
+
+  <!-- Top App Header / HUD Bar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo-icon">
+        <i class="fa-solid fa-crosshairs" style="color:#ffffff; font-size:16px;"></i>
+      </div>
+      <div class="brand-titles">
+        <span class="brand-title">AeroScope</span>
+        <span class="brand-subtitle"><i class="fa-solid fa-microchip" style="font-size:9px; margin-right:4px;"></i> Tactical Mesh & API Tracker</span>
+      </div>
+    </div>
+
+    <!-- Global Deep Trace Bar -->
+    <div class="global-trace-section">
+      <div class="trace-bar-input-wrapper">
+        <span class="trace-icon"><i class="fa-solid fa-globe"></i></span>
+        <input 
+          type="text" 
+          id="global-url-bar" 
+          class="global-input" 
+          placeholder="Enter target URL or API endpoint to trace (e.g. https://httpbin.org/get, https://example.com)..." 
+          value="" 
+        />
+      </div>
+      <button id="global-scan-btn" class="btn-trace">
+        <i class="fa-solid fa-satellite-dish"></i>
+        <span>Trace Mesh</span>
+      </button>
+    </div>
+
+    <!-- Active Architecture Status Badges -->
+    <div class="header-badges">
+      <div class="header-badge">
+        <span class="badge-label"><i class="fa-solid fa-bullseye"></i> Target:</span>
+        <span id="badge-root-host" class="badge-val">None</span>
+      </div>
+      <div class="header-badge">
+        <span class="badge-label"><i class="fa-solid fa-circle-nodes"></i> Mesh:</span>
+        <span id="badge-nodes-count" class="badge-val">0 Parties</span>
+      </div>
+      <div class="header-badge">
+        <span class="badge-label"><i class="fa-solid fa-wave-square"></i> Stream:</span>
+        <span id="badge-reqs-count" class="badge-val">0 Packets</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs Bar -->
+  <nav class="main-nav-bar">
+    <button class="main-nav-tab active" data-view="postman">
+      <span class="tab-icon"><i class="fa-solid fa-bolt"></i></span>
+      <span>Postman API Client</span>
+    </button>
+    <button class="main-nav-tab" data-view="wireshark">
+      <span class="tab-icon"><i class="fa-solid fa-network-wired"></i></span>
+      <span>Wireshark Traffic Stream</span>
+    </button>
+    <button class="main-nav-tab" data-view="mindmap">
+      <span class="tab-icon"><i class="fa-solid fa-diagram-project"></i></span>
+      <span>Distributed Topology Mindmap</span>
+    </button>
+    <button class="main-nav-tab" data-view="appframe">
+      <span class="tab-icon"><i class="fa-solid fa-code"></i></span>
+      <span>Source Code & Origin Frames</span>
+    </button>
+    <button class="main-nav-tab" data-view="dns">
+      <span class="tab-icon"><i class="fa-solid fa-server"></i></span>
+      <span>DNS Matrix</span>
+    </button>
+
+    <div class="nav-spacer" style="margin-left: auto;"></div>
+
+    <!-- Stack Views Toggle Button -->
+    <button id="stack-toggle-btn" class="stack-toggle-btn" title="Toggle Stacked Multi-View Mode">
+      <i class="fa-solid fa-layer-group"></i>
+      <span id="stack-btn-label">Stack Views</span>
+    </button>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="app-content" id="main-app-content">
+
+    <!-- ====================================================================
+         VIEW 1: POSTMAN API CLIENT
+         ==================================================================== -->
+    <section id="view-postman" class="view-panel active" data-panel-title="Postman API Client">
+      <div class="panel-stack-header">
+        <div class="panel-stack-title">
+          <i class="fa-solid fa-bolt"></i>
+          <span>SECTION // 01 — POSTMAN API CLIENT</span>
+        </div>
+        <div class="panel-stack-actions">
+          <button class="panel-stack-action-btn panel-focus-btn" onclick="window.switchMainView('postman', false)"><i class="fa-solid fa-expand"></i> Focus View</button>
+          <button class="panel-stack-action-btn panel-collapse-btn"><i class="fa-solid fa-chevron-up"></i></button>
+        </div>
+      </div>
+      <div class="postman-container">
+        <!-- History Sidebar -->
+        <aside class="postman-sidebar">
+          <div class="sidebar-header">
+            <span class="sidebar-title"><i class="fa-solid fa-clock-rotate-left"></i> Request History</span>
+          </div>
+          <div id="postman-history-list" class="history-list">
+            <div class="empty-history"><i class="fa-solid fa-inbox" style="margin-right:6px;"></i> No requests executed yet</div>
+          </div>
+        </aside>
+
+        <!-- Workbench Main -->
+        <div class="postman-main">
+          <!-- Request Builder Bar -->
+          <div class="request-builder-bar">
+            <div class="request-input-row">
+              <select id="postman-method-select" class="method-select method-get">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+                <option value="HEAD">HEAD</option>
+                <option value="OPTIONS">OPTIONS</option>
+              </select>
+              <input 
+                type="text" 
+                id="postman-url-input" 
+                class="url-input" 
+                placeholder="Enter request URL (e.g. https://jsonplaceholder.typicode.com/posts/1 or https://httpbin.org/get)..." 
+                value="" 
+              />
+              <button id="postman-send-btn" class="btn-send">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Send</span>
+              </button>
+              <button id="postman-trace-btn" class="btn-trace-distributed">
+                <i class="fa-solid fa-radar"></i>
+                <span>Send & Deep-Trace Mesh</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Split Workbench: Request / Response -->
+          <div class="postman-workbench">
+            <!-- Top Section: Request Config -->
+            <div class="workbench-section">
+              <div class="section-tabs-bar">
+                <div class="sub-tabs-group">
+                  <button class="sub-tab-btn req-tab-btn active" data-tab="params"><i class="fa-solid fa-sliders"></i> Params</button>
+                  <button class="sub-tab-btn req-tab-btn" data-tab="headers"><i class="fa-solid fa-heading"></i> Headers</button>
+                  <button class="sub-tab-btn req-tab-btn" data-tab="body"><i class="fa-solid fa-file-lines"></i> Body</button>
+                  <button class="sub-tab-btn req-tab-btn" data-tab="auth"><i class="fa-solid fa-key"></i> Authorization</button>
+                </div>
+              </div>
+
+              <div class="tab-pane-container">
+                <!-- Params Tab -->
+                <div class="req-tab-pane active" data-pane="params">
+                  <table class="keyvalue-table">
+                    <thead>
+                      <tr>
+                        <th class="col-check"></th>
+                        <th class="col-key">Parameter Key</th>
+                        <th class="col-val">Value</th>
+                        <th class="col-del"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="params-table-body">
+                      <!-- Dynamically added -->
+                    </tbody>
+                  </table>
+                  <button id="add-param-row-btn" class="btn-add-row"><i class="fa-solid fa-plus"></i> Add Parameter</button>
+                </div>
+
+                <!-- Headers Tab -->
+                <div class="req-tab-pane" data-pane="headers">
+                  <table class="keyvalue-table">
+                    <thead>
+                      <tr>
+                        <th class="col-check"></th>
+                        <th class="col-key">Header Key</th>
+                        <th class="col-val">Value</th>
+                        <th class="col-del"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="headers-table-body">
+                      <!-- Dynamically added -->
+                    </tbody>
+                  </table>
+                  <button id="add-header-row-btn" class="btn-add-row"><i class="fa-solid fa-plus"></i> Add Header</button>
+                </div>
+
+                <!-- Body Tab -->
+                <div class="req-tab-pane" data-pane="body">
+                  <div class="body-config-bar">
+                    <label><input type="radio" name="body-type" value="none" checked /> None</label>
+                    <label><input type="radio" name="body-type" value="json" /> JSON</label>
+                    <label><input type="radio" name="body-type" value="raw" /> Raw Text</label>
+                    <button id="format-json-btn" class="sample-preset-chip" style="margin-left:auto;"><i class="fa-solid fa-wand-magic-sparkles"></i> Format JSON</button>
+                  </div>
+                  <textarea id="body-json-editor" class="body-editor-textarea" placeholder='{\n  "key": "value"\n}'></textarea>
+                </div>
+
+                <!-- Auth Tab -->
+                <div class="req-tab-pane" data-pane="auth">
+                  <div style="display:flex; flex-direction:column; gap:12px; max-width:400px;">
+                    <div class="field">
+                      <label>Auth Type</label>
+                      <select id="auth-type-select" class="preset-dropdown">
+                        <option value="none">No Auth</option>
+                        <option value="bearer">Bearer Token</option>
+                        <option value="basic">Basic Auth</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label>Bearer Token</label>
+                      <input type="password" id="auth-bearer-token" placeholder="Bearer Token Value..." class="key-input" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Section: Response Viewer -->
+            <div class="workbench-section">
+              <div class="section-tabs-bar">
+                <div class="sub-tabs-group">
+                  <button class="sub-tab-btn res-tab-btn active" data-res-tab="pretty"><i class="fa-solid fa-code"></i> Pretty JSON</button>
+                  <button class="sub-tab-btn res-tab-btn" data-res-tab="raw"><i class="fa-solid fa-align-left"></i> Raw</button>
+                  <button class="sub-tab-btn res-tab-btn" data-res-tab="headers"><i class="fa-solid fa-list-check"></i> Headers</button>
+                  <button class="sub-tab-btn res-tab-btn" data-res-tab="preview"><i class="fa-solid fa-window-maximize"></i> Preview</button>
+                </div>
+
+                <div class="response-meta-bar">
+                  <span id="res-status-badge" class="status-pill status-3xx">---</span>
+                  <span id="res-time-badge" class="metric-pill">0 ms</span>
+                  <span id="res-size-badge" class="metric-pill">0 KB</span>
+                  <span id="res-ip-badge" class="ip-pill"><span>IP:</span> <strong>---</strong></span>
+                  <button id="copy-response-btn" class="sample-preset-chip"><i class="fa-solid fa-copy"></i> Copy</button>
+                </div>
+              </div>
+
+              <div class="tab-pane-container">
+                <div class="res-tab-pane active" data-res-pane="pretty">
+                  <pre id="res-json-content" class="res-body-pre">(No response received yet. Send a request to inspect output)</pre>
+                </div>
+                <div class="res-tab-pane" data-res-pane="raw">
+                  <pre id="res-raw-content" class="res-body-pre"></pre>
+                </div>
+                <div class="res-tab-pane" data-res-pane="headers">
+                  <table class="matrix-table">
+                    <thead>
+                      <tr><th>Header</th><th>Value</th></tr>
+                    </thead>
+                    <tbody id="res-headers-table">
+                      <tr><td colspan="2" style="color:var(--text-dim);"><i class="fa-solid fa-circle-info"></i> No headers received</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="res-tab-pane" data-res-pane="preview">
+                  <iframe id="res-preview-frame" style="width:100%; height:100%; border:none; background:#fff;"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 2: WIRESHARK TRAFFIC STREAM
+         ==================================================================== -->
+    <section id="view-wireshark" class="view-panel" data-panel-title="Wireshark Traffic Stream">
+      <div class="panel-stack-header">
+        <div class="panel-stack-title">
+          <i class="fa-solid fa-network-wired"></i>
+          <span>SECTION // 02 — WIRESHARK TRAFFIC STREAM</span>
+        </div>
+        <div class="panel-stack-actions">
+          <button class="panel-stack-action-btn panel-focus-btn" onclick="window.switchMainView('wireshark', false)"><i class="fa-solid fa-expand"></i> Focus View</button>
+          <button class="panel-stack-action-btn panel-collapse-btn"><i class="fa-solid fa-chevron-up"></i></button>
+        </div>
+      </div>
+      <div class="wireshark-container">
+        <!-- Top Toolbar & Wireshark Color Rule Legend -->
+        <div class="wireshark-top-bar">
+          <div class="legend-chips-row">
+            <span class="legend-label">Domain Traffic Classification Rules:</span>
+            
+            <div class="legend-chip chip-main" data-category="main" title="Main Domain: Dark Royal Blue">
+              <span class="legend-dot"></span>
+              <span>Main Domain (#1d4ed8)</span>
+            </div>
+
+            <div class="legend-chip chip-subdomain" data-category="subdomain" title="Subdomain of Main Domain: Sky Blue">
+              <span class="legend-dot"></span>
+              <span>Subdomains (#0284c7)</span>
+            </div>
+
+            <div class="legend-chip chip-api" data-category="api" title="API & Microservices: Emerald Green">
+              <span class="legend-dot"></span>
+              <span>API Services (#059669)</span>
+            </div>
+
+            <div class="legend-chip chip-cdn" data-category="cdn" title="CDN & Static Assets: Violet / Purple">
+              <span class="legend-dot"></span>
+              <span>CDN Assets (#7c3aed)</span>
+            </div>
+
+            <div class="legend-chip chip-analytics" data-category="analytics" title="Telemetry & Analytics: Amber / Gold">
+              <span class="legend-dot"></span>
+              <span>Telemetry (#d97706)</span>
+            </div>
+
+            <div class="legend-chip chip-thirdparty" data-category="thirdparty" title="3rd-Party Partners: Rose / Magenta">
+              <span class="legend-dot"></span>
+              <span>3rd-Party Partners (#e11d48)</span>
+            </div>
+          </div>
+
+          <div class="filter-search-row">
+            <div style="position:relative; flex:1;">
+              <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-dim); font-size:12px;"></i>
+              <input 
+                type="text" 
+                id="wireshark-search-input" 
+                class="search-input-box" 
+                style="padding-left:34px;"
+                placeholder="Filter packets by host, method, IP address, status, or path..." 
+              />
+            </div>
+            <div id="wireshark-stream-stats" class="stream-stats">
+              <span>Showing <strong>0</strong> transactions</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Packet Waterfall Table -->
+        <div class="wireshark-table-wrapper" id="wireshark-table-container">
+          <div class="empty-table-state">
+            <div class="empty-icon"><i class="fa-solid fa-network-wired"></i></div>
+            <h4>No network packets captured yet</h4>
+            <p>Execute an API request in Postman or enter a target URL in the Trace bar to inspect distributed network traffic.</p>
+          </div>
+        </div>
+
+        <!-- Slide-out Packet Detail Drawer -->
+        <div id="packet-detail-drawer" class="packet-drawer">
+          <div class="drawer-header">
+            <h4><i class="fa-solid fa-microscope" style="margin-right:6px; color:var(--neon-cyan);"></i> Packet Inspector</h4>
+            <button class="modal-close-btn" onclick="window.closePacketDrawer()"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="drawer-body">
+            <div class="drawer-field">
+              <label>Domain Role</label>
+              <div id="drawer-res-role"></div>
+            </div>
+            <div class="drawer-field">
+              <label>Target URL</label>
+              <div id="drawer-res-url" class="val"></div>
+            </div>
+            <div class="drawer-field">
+              <label>Domain Host</label>
+              <div id="drawer-res-host" class="val"></div>
+            </div>
+            <div class="drawer-field">
+              <label>Resolved Remote Server IP</label>
+              <div id="drawer-res-ip" class="val ip-highlight"></div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div class="drawer-field">
+                <label>Method</label>
+                <div id="drawer-res-method" class="val"></div>
+              </div>
+              <div class="drawer-field">
+                <label>Status</label>
+                <div id="drawer-res-status" class="val"></div>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div class="drawer-field">
+                <label>Payload Size</label>
+                <div id="drawer-res-size" class="val"></div>
+              </div>
+              <div class="drawer-field">
+                <label>Latency</label>
+                <div id="drawer-res-time" class="val"></div>
+              </div>
+            </div>
+            <div class="drawer-actions">
+              <button id="drawer-btn-graph" class="btn-drawer-action"><i class="fa-solid fa-diagram-project"></i> Highlight in Topology Mindmap</button>
+              <button id="drawer-btn-frame" class="btn-drawer-action"><i class="fa-solid fa-code"></i> Highlight in Source Code View</button>
+              <button id="drawer-btn-postman" class="btn-drawer-action"><i class="fa-solid fa-bolt"></i> Open in Postman Client</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 3: DISTRIBUTED TOPOLOGY MINDMAP
+         ==================================================================== -->
+    <section id="view-mindmap" class="view-panel" data-panel-title="Distributed Topology Mindmap">
+      <div class="panel-stack-header">
+        <div class="panel-stack-title">
+          <i class="fa-solid fa-diagram-project"></i>
+          <span>SECTION // 03 — DISTRIBUTED TOPOLOGY MINDMAP</span>
+        </div>
+        <div class="panel-stack-actions">
+          <button class="panel-stack-action-btn panel-focus-btn" onclick="window.switchMainView('mindmap', false)"><i class="fa-solid fa-expand"></i> Focus View</button>
+          <button class="panel-stack-action-btn panel-collapse-btn"><i class="fa-solid fa-chevron-up"></i></button>
+        </div>
+      </div>
+      <div class="mindmap-container">
+        <!-- Interactive Vis-Network Canvas Area -->
+        <div class="mindmap-canvas-area">
+          <div class="mindmap-floating-controls">
+            <button id="mindmap-btn-fit" class="btn-ctrl"><i class="fa-solid fa-expand"></i> Fit to View</button>
+            <label class="ctrl-check-label">
+              <input type="checkbox" id="mindmap-physics-toggle" checked />
+              <span>Physics Simulation</span>
+            </label>
+          </div>
+          <div id="topology-network-canvas"></div>
+        </div>
+
+        <!-- Right Side Domain Details Inspector -->
+        <aside class="mindmap-sidebar">
+          <div class="mindmap-sidebar-title"><i class="fa-solid fa-circle-nodes"></i> Collaborating Party Inspector</div>
+          <div id="mindmap-sidebar-details" class="mindmap-sidebar-content">
+            <div class="sidebar-placeholder">
+              <p>No active topology. Send an API request or trace a URL to visualize collaborating domains and their IP addresses.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 4: APPLICATION SOURCE CODE & ORIGIN TRAFFIC FRAMES
+         ==================================================================== -->
+    <section id="view-appframe" class="view-panel" data-panel-title="Source Code Origin Traffic Frames">
+      <div class="panel-stack-header">
+        <div class="panel-stack-title">
+          <i class="fa-solid fa-code"></i>
+          <span>SECTION // 04 — APPLICATION SOURCE CODE & ORIGIN FRAMES</span>
+        </div>
+        <div class="panel-stack-actions">
+          <button class="panel-stack-action-btn panel-focus-btn" onclick="window.switchMainView('appframe', false)"><i class="fa-solid fa-expand"></i> Focus View</button>
+          <button class="panel-stack-action-btn panel-collapse-btn"><i class="fa-solid fa-chevron-up"></i></button>
+        </div>
+      </div>
+      <div class="appframe-container">
+        <!-- Top Toolbar Header -->
+        <div class="browser-chrome-bar">
+          <div class="browser-nav-controls">
+            <span class="browser-dot dot-red"></span>
+            <span class="browser-dot dot-yellow"></span>
+            <span class="browser-dot dot-green"></span>
+          </div>
+
+          <div class="browser-url-display">
+            <span class="lock-icon"><i class="fa-solid fa-file-code"></i></span>
+            <span id="browser-address-text">Source Code Origin Traffic Frames</span>
+          </div>
+
+          <div style="font-size:11px; color:var(--text-dim);">
+            Code lines highlighted & framed based on generated network traffic
+          </div>
+        </div>
+
+        <!-- Rendered Source Code Canvas with Color-Framed Lines & Badges -->
+        <div id="browser-viewport-content" style="flex:1; overflow:hidden; display:flex;">
+          <div class="empty-source-state" style="margin:auto;">
+            <div class="empty-icon"><i class="fa-solid fa-file-code"></i></div>
+            <h3>No Source Code Loaded</h3>
+            <p>Send an API request in the Postman tab or enter a URL in the Trace bar to inspect the source code framed by the origin traffic it will generate.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 5: DNS & IP RESOLUTION MATRIX
+         ==================================================================== -->
+    <section id="view-dns" class="view-panel" data-panel-title="DNS & IP Resolution Matrix">
+      <div class="panel-stack-header">
+        <div class="panel-stack-title">
+          <i class="fa-solid fa-server"></i>
+          <span>SECTION // 05 — DNS & IP RESOLUTION MATRIX</span>
+        </div>
+        <div class="panel-stack-actions">
+          <button class="panel-stack-action-btn panel-focus-btn" onclick="window.switchMainView('dns', false)"><i class="fa-solid fa-expand"></i> Focus View</button>
+          <button class="panel-stack-action-btn panel-collapse-btn"><i class="fa-solid fa-chevron-up"></i></button>
+        </div>
+      </div>
+      <div class="dns-matrix-container">
+        <div class="matrix-card">
+          <h3><i class="fa-solid fa-network-wired" style="color:var(--neon-cyan); margin-right:8px;"></i> Distributed Parties & Resolved IP Directory</h3>
+          <p>Every autonomous collaborating domain, resolved IP address, and infrastructure provider involved in serving the application.</p>
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th>Domain Role (Wireshark)</th>
+                <th>Host Domain</th>
+                <th>Resolved Server IP</th>
+                <th>Infrastructure Provider</th>
+                <th>Packets Captured</th>
+                <th>Total Transferred</th>
+              </tr>
+            </thead>
+            <tbody id="dns-matrix-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 32px 12px;">
+                  No DNS records resolved yet. Execute an API request or enter a target URL to populate the matrix.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================================
+       ORIGIN SOURCE CODE & COMPONENT MODAL
+       ====================================================================== -->
+  <div id="origin-code-modal" class="origin-code-modal-overlay">
+    <div class="origin-code-modal-box">
+      <div class="origin-modal-header">
+        <div class="modal-header-left">
+          <h3 id="modal-origin-title" class="modal-origin-host">Endpoint</h3>
+          <div id="modal-origin-role"></div>
+        </div>
+        <button id="modal-origin-close" class="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="origin-modal-body">
+        <div class="origin-meta-grid" id="modal-origin-headers">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="code-view-container">
+          <div class="code-view-header">
+            <span>Code Line Generating This Network Traffic:</span>
+            <button id="modal-copy-code-btn" class="btn-copy-code"><i class="fa-solid fa-copy"></i> Copy Code</button>
+          </div>
+          <pre id="modal-origin-code" class="origin-code-pre"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Scripts -->
+  <script src="scripts/domain-classifier.js"></script>
+  <script src="scripts/wireshark-table.js"></script>
+  <script src="scripts/mindmap.js"></script>
+  <script src="scripts/app-frame.js"></script>
+  <script src="scripts/postman.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
+</html>

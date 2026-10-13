@@ -1,0 +1,26 @@
+{
+  "name": "aerowire-system-tracker",
+  "version": "1.0.0",
+  "description": "Postman-like API Client and Wireshark-style Multi-Domain Distributed System Tracker with Origin Framing",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "keywords": [
+    "postman",
+    "wireshark",
+    "distributed-systems",
+    "network-topology",
+    "mindmap",
+    "electron"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "vis-network": "^9.1.9"
+  },
+  "devDependencies": {
+    "electron": "^34.2.0"
+  }
+}
